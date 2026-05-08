@@ -1,0 +1,61 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Honey hunter or manager profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["hunter", "manager"] },
+        "location": { "type": "string" },
+        "totalHarvested": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "role"]
+    },
+    "Harvest": {
+      "title": "Harvest",
+      "description": "A single honey collection entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "hunterId": { "type": "string" },
+        "hunterName": { "type": "string" },
+        "quantity": { "type": "number", "description": "Quantity in kg" },
+        "floralSource": { "type": "string" },
+        "location": { "type": "string" },
+        "grade": { "type": "string", "enum": ["A", "B", "U"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["hunterId", "quantity", "floralSource"]
+    },
+    "MarketPrice": {
+      "title": "MarketPrice",
+      "description": "Daily market rates for different cities",
+      "type": "object",
+      "properties": {
+        "city": { "type": "string" },
+        "retail": { "type": "number" },
+        "wholesale": { "type": "number" },
+        "date": { "type": "string", "format": "date" }
+      },
+      "required": ["city", "retail", "wholesale"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "harvests/{harvestId}": {
+      "schema": "Harvest",
+      "description": "Honey collection logs"
+    },
+    "marketPrices/{priceId}": {
+      "schema": "MarketPrice",
+      "description": "Market rates history"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "jenugumpu-android",
+  "version": "1.0.0",
+  "description": "Native Android application for Jenu-Gumpu",
+  "scripts": {
+    "build": "gradle assembleDebug",
+    "lint": "gradle lint"
+  },
+  "dependencies": {}
+}
