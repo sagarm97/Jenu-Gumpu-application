@@ -1,9 +1,10 @@
-export type UserRole = 'hunter' | 'manager';
+export type UserRole = 'hunter';
 
 export interface UserProfile {
   uid: string;
   name: string;
   email: string;
+  phoneNumber?: string;
   role: UserRole;
   location?: string;
   photoURL?: string;

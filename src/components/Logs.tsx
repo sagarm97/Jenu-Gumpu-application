@@ -93,10 +93,12 @@ export default function Logs({ profile }: { profile: UserProfile | null }) {
 function AddHarvestModal({ profile, onClose }: { profile: UserProfile | null, onClose: () => void }) {
   const [weight, setWeight] = useState('');
   const [source, setSource] = useState('Wildflower');
+  const [grade, setGrade] = useState('A');
   const [submitting, setSubmitting] = useState(false);
   const { t } = useLanguage();
 
   const sources = ['Coffee Blossom', 'Wildflower', 'Neem', 'Eucalyptus'];
+  const grades = ['A', 'B', 'C'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,8 +111,8 @@ function AddHarvestModal({ profile, onClose }: { profile: UserProfile | null, on
         hunterName: profile.name,
         quantity: parseFloat(weight),
         floralSource: source,
-        location: profile.location || 'Western Ghats',
-        grade: 'U', // Uncharted by default
+        location: 'Wild harvest',
+        grade: grade,
         timestamp: serverTimestamp(),
       });
 
@@ -134,9 +136,9 @@ function AddHarvestModal({ profile, onClose }: { profile: UserProfile | null, on
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="bg-white w-full max-w-md rounded-[40px] p-8 shadow-2xl overflow-hidden relative"
+        className="bg-white w-full max-w-md rounded-[40px] p-8 shadow-2xl overflow-hidden relative overflow-y-auto max-h-[80vh]"
       >
-        <button onClick={onClose} className="absolute top-6 right-6 w-10 h-10 bg-zinc-100 rounded-full flex items-center justify-center">
+        <button onClick={onClose} className="absolute top-6 right-6 w-10 h-10 bg-zinc-100 rounded-full flex items-center justify-center z-10">
           <X className="w-5 h-5 text-zinc-500" />
         </button>
 
@@ -145,7 +147,7 @@ function AddHarvestModal({ profile, onClose }: { profile: UserProfile | null, on
           <h2 className="text-2xl font-serif font-bold text-brand-secondary">{t('logs.add_harvest')}</h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="text-[10px] font-black uppercase text-amber-600 tracking-widest mb-4 block">{t('logs.quantity')}</label>
             <input 
@@ -169,8 +171,8 @@ function AddHarvestModal({ profile, onClose }: { profile: UserProfile | null, on
                     type="button"
                     onClick={() => setSource(s)}
                     className={cn(
-                      "px-5 py-3 rounded-2xl text-sm font-bold transition-all",
-                      source === s ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30" : "bg-zinc-50 text-zinc-400"
+                      "px-5 py-3 rounded-2xl text-sm font-bold transition-all border",
+                      source === s ? "bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/30" : "bg-zinc-50 text-zinc-400 border-transparent shadow-sm"
                     )}
                   >
                     {s}
@@ -179,20 +181,33 @@ function AddHarvestModal({ profile, onClose }: { profile: UserProfile | null, on
              </div>
           </div>
 
-          <div className="p-4 bg-amber-50 rounded-2xl flex items-center gap-3">
-             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
-                <MapPin className="w-5 h-5 text-amber-500" />
-             </div>
-             <div>
-                <p className="text-[8px] font-bold text-amber-600 uppercase tracking-widest leading-none mb-1">LOCATION (GPS)</p>
-                <p className="text-sm font-bold text-brand-secondary">{profile?.location || 'Manual required'}</p>
+          <div>
+             <label className="text-[10px] font-black uppercase text-amber-600 tracking-widest mb-4 block">{t('logs.grade')}</label>
+             <div className="flex gap-2">
+                {grades.map(g => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setGrade(g)}
+                    className={cn(
+                      "flex-1 py-3 rounded-2xl text-sm font-black transition-all border",
+                      grade === g 
+                        ? (g === 'A' ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/30" : 
+                           g === 'B' ? "bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/30" : 
+                           "bg-zinc-500 text-white border-zinc-500 shadow-lg shadow-zinc-500/30")
+                        : "bg-zinc-50 text-zinc-400 border-transparent shadow-sm"
+                    )}
+                  >
+                    Grade {g}
+                  </button>
+                ))}
              </div>
           </div>
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-amber-200 text-amber-800 hover:bg-amber-300 disabled:opacity-50 py-5 rounded-3xl font-bold flex items-center justify-center gap-3 transition-colors"
+            className="w-full bg-brand-primary text-white hover:bg-brand-primary/90 disabled:opacity-50 py-5 rounded-3xl font-bold flex items-center justify-center gap-3 transition-all mt-4 shadow-xl shadow-brand-primary/20"
           >
             {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <SaveIcon className="w-6 h-6" />}
             {t('logs.save')}

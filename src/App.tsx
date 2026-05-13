@@ -3,7 +3,8 @@ import { auth, signInWithGoogle, logout, db } from './lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { UserProfile, UserRole } from './types';
-import { Home, ClipboardList, TrendingUp, Users, Calculator, User as UserIcon, LogOut, Loader2, Sparkles, Languages } from 'lucide-react';
+import { Home, ClipboardList, TrendingUp, Calculator, User as UserIcon, LogOut, Loader2, Languages, Sparkles } from 'lucide-react';
+import HoneyBee from './components/HoneyBee';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 import { LanguageProvider, useLanguage, languages } from './contexts/LanguageContext';
@@ -12,49 +13,58 @@ import { LanguageProvider, useLanguage, languages } from './contexts/LanguageCon
 import Dashboard from './components/Dashboard';
 import Logs from './components/Logs';
 import Prices from './components/Prices';
-import Collective from './components/Collective';
+import GradeHoney from './components/GradeHoney';
 import Profit from './components/Profit';
 import Profile from './components/Profile';
 import LanguageSelector from './components/LanguageSelector';
+import Login from './components/Login';
 
-type Tab = 'home' | 'logs' | 'prices' | 'collective' | 'profit' | 'profile';
+type Tab = 'home' | 'logs' | 'prices' | 'profit' | 'profile' | 'grade';
 
 function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authChecking, setAuthChecking] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [isLangOpen, setIsLangOpen] = useState(false);
   const { language, t } = useLanguage();
 
   useEffect(() => {
-    return onAuthStateChanged(auth, async (u) => {
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
-        const userDoc = await getDoc(doc(db, 'users', u.uid));
-        if (userDoc.exists()) {
-          setProfile(userDoc.data() as UserProfile);
-        } else {
-          // Create default profile
-          const newProfile: UserProfile = {
-            uid: u.uid,
-            name: u.displayName || 'Friend',
-            email: u.email || '',
-            role: 'hunter',
-            totalHarvested: 0,
-            createdAt: new Date().toISOString(),
-          };
-          await setDoc(doc(db, 'users', u.uid), newProfile);
-          setProfile(newProfile);
+        try {
+          const userDoc = await getDoc(doc(db, 'users', u.uid));
+          if (userDoc.exists()) {
+            setProfile(userDoc.data() as UserProfile);
+          } else {
+            const newProfile: UserProfile = {
+              uid: u.uid,
+              name: u.displayName || u.phoneNumber || u.email?.split('@')[0] || 'Friend',
+              email: u.email || '',
+              role: 'hunter',
+              totalHarvested: 0,
+              createdAt: new Date().toISOString(),
+              photoURL: u.photoURL || null
+            };
+            await setDoc(doc(db, 'users', u.uid), newProfile);
+            setProfile(newProfile);
+          }
+        } catch (err) {
+          console.error("Error fetching/setting profile:", err);
         }
       } else {
         setProfile(null);
       }
       setLoading(false);
+      setAuthChecking(false);
     });
+
+    return () => unsubscribe();
   }, []);
 
-  if (loading) {
+  if (loading || authChecking) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
@@ -64,33 +74,7 @@ function AppContent() {
   }
 
   if (!user) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
-        <div className="relative mb-8">
-          <div className="absolute inset-0 scale-150 blur-3xl bg-brand-primary/20 rounded-full" />
-          <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="relative w-24 h-24 bg-brand-primary rounded-3xl flex items-center justify-center shadow-2xl shadow-brand-primary/40"
-          >
-            <Sparkles className="w-12 h-12 text-white" />
-          </motion.div>
-        </div>
-        
-        <h1 className="text-4xl font-serif font-bold mb-2">Jenu-Gumpu</h1>
-        <p className="text-brand-secondary/60 mb-8 max-w-xs">
-          Empowering honey hunters with market insights and AI grading.
-        </p>
-
-        <button
-          onClick={signInWithGoogle}
-          className="w-full max-w-xs bg-brand-primary text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-amber-600 transition-all flex items-center justify-center gap-3"
-        >
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/layout/google.svg" className="w-6 h-6 bg-white rounded-full p-1" alt="Google" />
-          Sign in with Google
-        </button>
-      </div>
-    );
+    return <Login />;
   }
 
   const renderContent = () => {
@@ -98,8 +82,8 @@ function AppContent() {
       case 'home': return <Dashboard profile={profile} onTabChange={setActiveTab} />;
       case 'logs': return <Logs profile={profile} />;
       case 'prices': return <Prices />;
-      case 'collective': return <Collective profile={profile} />;
       case 'profit': return <Profit />;
+      case 'grade': return <GradeHoney />;
       case 'profile': return <Profile profile={profile} setProfile={setProfile} onLogout={logout} />;
       default: return <Dashboard profile={profile} onTabChange={setActiveTab} />;
     }
@@ -110,9 +94,6 @@ function AppContent() {
       {/* Header */}
       <header className="px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center shadow-lg shadow-brand-primary/20">
-            <Sparkles className="w-6 h-6 text-white" />
-          </div>
           <div>
             <h2 className="text-xl font-serif font-bold leading-none">{t('app.name')}</h2>
             <p className="text-[10px] uppercase tracking-widest font-bold text-brand-primary mt-1">{t('app.subtitle')}</p>
@@ -129,13 +110,9 @@ function AppContent() {
            </button>
            <button 
              onClick={() => setActiveTab('profile')}
-             className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20 overflow-hidden"
+             className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20 transition-colors hover:bg-brand-primary/20"
            >
-             {profile?.photoURL ? (
-               <img src={profile.photoURL} alt="User" className="w-full h-full object-cover" />
-             ) : (
-               <UserIcon className="w-5 h-5 text-brand-primary" />
-             )}
+             <UserIcon className="w-5 h-5 text-brand-primary" />
            </button>
         </div>
       </header>
@@ -160,8 +137,8 @@ function AppContent() {
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-[calc(448px-48px)] bg-white/80 backdrop-blur-xl border border-brand-primary/10 rounded-3xl p-2 flex items-center justify-between shadow-2xl z-50">
         <NavButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={<Home />} label={t('nav.home')} />
         <NavButton active={activeTab === 'logs'} onClick={() => setActiveTab('logs')} icon={<ClipboardList />} label={t('nav.logs')} />
+        <NavButton active={activeTab === 'grade'} onClick={() => setActiveTab('grade')} icon={<Sparkles />} label="Grade" />
         <NavButton active={activeTab === 'prices'} onClick={() => setActiveTab('prices')} icon={<TrendingUp />} label={t('nav.prices')} />
-        <NavButton active={activeTab === 'collective'} onClick={() => setActiveTab('collective')} icon={<Users />} label={t('nav.collective')} />
         <NavButton active={activeTab === 'profit'} onClick={() => setActiveTab('profit')} icon={<Calculator />} label={t('nav.profit')} />
       </nav>
 

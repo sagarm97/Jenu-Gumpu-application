@@ -1,169 +1,300 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from './ui/Card';
-import { Calculator, ShoppingBag, Package, ArrowDown, ChevronRight, Info, TrendingUp, Loader2 } from 'lucide-react';
-import { motion } from 'motion/react';
-import { cn } from '../lib/utils';
+import { Calculator, Package, Info, TrendingUp, Truck, Users, Scissors, Sparkles, DollarSign, Percent } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { db } from '../lib/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
 
 export default function Profit() {
-  const [quantity, setQuantity] = useState(28);
-  const [filterCost, setFilterCost] = useState(20);
-  const [packageCost, setPackageCost] = useState(40);
-  const [prices, setPrices] = useState({ retail: 750, wholesale: 350 });
-  const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
- 
-  useEffect(() => {
-    // Default to Bengaluru prices for the simulator
-    const unsubscribe = onSnapshot(doc(db, 'marketPrices', 'Bengaluru'), (doc) => {
-      if (doc.exists()) {
-        const data = doc.data();
-        setPrices({ retail: data.retail, wholesale: data.wholesale });
-      }
-      setLoading(false);
-    });
+  
+  // Input States
+  const [quantity, setQuantity] = useState(10);
+  const [harvestCost, setHarvestCost] = useState(200);   // Total
+  const [processCost, setProcessCost] = useState(500);   // Total
+  const [packageCost, setPackageCost] = useState(30);    // Per KG
+  const [shippingCost, setShippingCost] = useState(50);   // Per KG
+  const [laborCost, setLaborCost] = useState(1000);      // Total
+  const [commission, setCommission] = useState(10);      // Percentage
+  const [sellingPrice, setSellingPrice] = useState(800); // Per KG
+  const [targetMargin, setTargetMargin] = useState(30); // Percentage
 
-    return () => unsubscribe();
-  }, []);
+  // Advanced View
+  const [view, setView] = useState<'calc' | 'results'>('calc');
 
-  const wholesalePrice = prices.wholesale;
-  const retailPrice = prices.retail;
- 
-  const rawEarning = quantity * wholesalePrice;
-  const totalCost = (filterCost + packageCost) * quantity;
-  const processedEarning = (quantity * retailPrice) - totalCost;
-  const diff = processedEarning - rawEarning;
-  const percentage = (diff / rawEarning) * 100;
- 
-  if (loading) {
-    return (
-      <div className="h-96 flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-amber-500" />
-      </div>
-    );
-  }
+  // Calculations
+  const totalVariableCostsPerKg = packageCost + shippingCost;
+  const totalVariableCosts = totalVariableCostsPerKg * quantity;
+  const totalFixedCosts = harvestCost + processCost + laborCost;
+  
+  const totalProductionCost = totalVariableCosts + totalFixedCosts;
+  const costPerKg = totalProductionCost / quantity;
+  
+  const revenue = quantity * sellingPrice;
+  const commissionAmount = revenue * (commission / 100);
+  const totalProfit = revenue - totalProductionCost - commissionAmount;
+  const profitPerKg = totalProfit / quantity;
+  
+  // Recommended Selling Price Formula:
+  // Price = costPerKg / (1 - (targetMargin/100) - (commission/100))
+  const marginFrac = targetMargin / 100;
+  const commFrac = commission / 100;
+  const recommendedPrice = (costPerKg) / (1 - marginFrac - commFrac);
 
   return (
-    <div className="space-y-8 py-4">
-      <div>
-        <h1 className="text-3xl font-serif font-bold">{t('profit.title')}</h1>
-        <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">PROFIT SIMULATOR</p>
+    <div className="space-y-6 py-4">
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-serif font-bold">{t('profit.title')}</h1>
+          <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">{t('profit.simulator')}</p>
+        </div>
+        <div className="flex bg-zinc-100 p-1 rounded-xl">
+          <button 
+            onClick={() => setView('calc')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'calc' ? 'bg-white shadow-sm text-brand-secondary' : 'text-zinc-400'}`}
+          >
+            INPUTS
+          </button>
+          <button 
+            onClick={() => setView('results')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'results' ? 'bg-white shadow-sm text-brand-secondary' : 'text-zinc-400'}`}
+          >
+            RESULTS
+          </button>
+        </div>
       </div>
- 
-      <Card className="p-8 border-4 border-amber-50 overflow-visible">
-        <div className="space-y-10">
-          <div>
-            <label className="text-[10px] font-black uppercase text-amber-600 tracking-widest mb-10 block flex justify-between">
-               {t('logs.quantity')}
-            </label>
-            <div className="relative pt-2">
+
+      <AnimatePresence mode="wait">
+        {view === 'calc' ? (
+          <motion.div 
+            key="calc"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-6"
+          >
+            {/* Quantity Slider */}
+            <Card className="p-6 border-2 border-amber-100">
+              <div className="flex justify-between items-center mb-6">
+                <label className="text-[10px] font-black uppercase text-amber-600 tracking-widest">
+                  {t('logs.quantity')}
+                </label>
+                <span className="text-2xl font-bold font-serif text-brand-secondary">{quantity}kg</span>
+              </div>
               <input 
                 type="range" 
                 min="1" 
-                max="100" 
+                max="500" 
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value))}
-                className="w-full h-3 bg-amber-100 rounded-full appearance-none cursor-pointer accent-amber-500"
+                className="w-full h-2 bg-amber-100 rounded-full appearance-none cursor-pointer accent-amber-500"
               />
-              <div className="flex justify-between mt-4 text-sm font-bold opacity-60">
-                <span>1kg</span>
-                <span className="text-4xl text-brand-secondary opacity-100 -mt-6">{quantity}kg</span>
-                <span>100kg</span>
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ExpenseInput 
+                icon={<Scissors className="w-4 h-4" />} 
+                label={t('profit.harvesting_cost')} 
+                value={harvestCost} 
+                onChange={setHarvestCost} 
+                subLabel="Total Fixed"
+              />
+              <ExpenseInput 
+                icon={<Sparkles className="w-4 h-4" />} 
+                label={t('profit.processing_cost')} 
+                value={processCost} 
+                onChange={setProcessCost} 
+                subLabel="Total Fixed"
+              />
+              <ExpenseInput 
+                icon={<Package className="w-4 h-4" />} 
+                label={t('profit.packaging_cost')} 
+                value={packageCost} 
+                onChange={setPackageCost} 
+                subLabel="Per KG"
+              />
+              <ExpenseInput 
+                icon={<Truck className="w-4 h-4" />} 
+                label={t('profit.shipping_cost')} 
+                value={shippingCost} 
+                onChange={setShippingCost} 
+                subLabel="Per KG"
+              />
+              <ExpenseInput 
+                icon={<Users className="w-4 h-4" />} 
+                label={t('profit.labor_cost')} 
+                value={laborCost} 
+                onChange={setLaborCost} 
+                subLabel="Total Fixed"
+              />
+              <ExpenseInput 
+                icon={<Percent className="w-4 h-4" />} 
+                label={t('profit.commission')} 
+                value={commission} 
+                onChange={setCommission} 
+                subLabel="Market Fee"
+              />
+            </div>
+
+            <Card className="p-6 bg-brand-secondary text-white">
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="text-[10px] font-bold opacity-60 uppercase tracking-widest block mb-2">{t('profit.selling_price')}</label>
+                  <div className="relative">
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 text-white/40 font-bold">₹</span>
+                    <input 
+                      type="number"
+                      value={sellingPrice === 0 ? '' : sellingPrice}
+                      onChange={(e) => setSellingPrice(e.target.value === '' ? 0 : parseInt(e.target.value))}
+                      onFocus={(e) => e.target.select()}
+                      className="w-full bg-transparent border-b border-white/20 text-2xl font-bold py-2 pl-4 focus:outline-none focus:border-amber-400 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold opacity-60 uppercase tracking-widest block mb-2">{t('profit.target_margin')}</label>
+                  <div className="relative">
+                    <input 
+                      type="number"
+                      value={targetMargin === 0 ? '' : targetMargin}
+                      onChange={(e) => setTargetMargin(e.target.value === '' ? 0 : parseInt(e.target.value))}
+                      onFocus={(e) => e.target.select()}
+                      className="w-full bg-transparent border-b border-white/20 text-2xl font-bold py-2 pr-6 focus:outline-none focus:border-amber-400 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <span className="absolute right-0 top-1/2 -translate-y-1/2 text-white/40 font-bold">%</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <button 
+              onClick={() => setView('results')}
+              className="w-full bg-amber-500 text-white font-bold py-5 rounded-3xl shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+            >
+              <Calculator className="w-5 h-5" />
+              VIEW PROFIT ANALYSIS
+            </button>
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="results"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            {/* Quick Profit Card */}
+            <Card className={`p-8 relative overflow-hidden transition-colors ${totalProfit > 0 ? 'bg-emerald-500' : 'bg-rose-500'} text-white`}>
+              <div className="relative z-10 text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 opacity-80">{t('profit.total_profit')}</p>
+                <h2 className="text-6xl font-bold mb-2">₹{Math.round(totalProfit).toLocaleString()}</h2>
+                <div className="flex items-center justify-center gap-4 mt-6">
+                  <div className="bg-white/10 px-4 py-2 rounded-xl backdrop-blur-sm">
+                    <p className="text-[8px] font-bold opacity-60">PER KG</p>
+                    <p className="text-lg font-bold">₹{Math.round(profitPerKg)}</p>
+                  </div>
+                  <div className="bg-white/10 px-4 py-2 rounded-xl backdrop-blur-sm">
+                    <p className="text-[8px] font-bold opacity-60">MARGIN</p>
+                    <p className="text-lg font-bold">{Math.round((totalProfit/revenue)*100)}%</p>
+                  </div>
+                </div>
+              </div>
+              <TrendingUp className="absolute bottom-0 right-0 w-64 h-64 text-white/10 -mr-16 -mb-16" />
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ResultCard 
+                label={t('profit.total_cost')} 
+                value={`₹${Math.round(totalProductionCost).toLocaleString()}`} 
+                icon={<DollarSign className="w-5 h-5 text-amber-500" />} 
+              />
+              <ResultCard 
+                label={t('profit.cost_per_kg')} 
+                value={`₹${Math.round(costPerKg).toLocaleString()}`} 
+                icon={<Calculator className="w-5 h-5 text-blue-500" />} 
+              />
+            </div>
+
+            {/* Recommended Price Card */}
+            <Card className="p-8 border-4 border-dashed border-amber-200 bg-amber-50/50">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center shrink-0">
+                  <Sparkles className="w-6 h-6 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">{t('profit.rec_price')}</p>
+                  <h3 className="text-3xl font-serif font-bold text-brand-secondary">₹{Math.round(recommendedPrice).toLocaleString()}/KG</h3>
+                  <p className="text-xs text-zinc-500 mt-2 leading-relaxed">
+                    Based on your <span className="font-bold text-brand-secondary">{targetMargin}%</span> target margin 
+                    and <span className="font-bold text-brand-secondary">{commission}%</span> platform fee.
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <div className="p-6 bg-zinc-50 rounded-[40px] flex gap-4 items-start">
+              <Info className="w-6 h-6 text-zinc-400 shrink-0 mt-1" />
+              <div className="space-y-2">
+                <p className="text-sm font-bold text-zinc-700">Cost Breakdown Reminder</p>
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  Your "Fixed Costs" (Labor, Harvesting, Processing) contribute <strong>₹{Math.round(totalFixedCosts/quantity)}/kg</strong> to your overall production cost for this batch.
+                </p>
               </div>
             </div>
+
+            <button 
+              onClick={() => setView('calc')}
+              className="w-full py-5 rounded-3xl font-bold flex items-center justify-center gap-2 text-zinc-400 hover:text-zinc-600 transition-colors"
+            >
+              Adjust Inputs
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function ExpenseInput({ icon, label, value, onChange, subLabel }: any) {
+  return (
+    <Card className="p-4 border-zinc-100 hover:border-amber-200 transition-all group">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-amber-50 rounded-lg group-hover:bg-amber-100 transition-colors">
+            {icon}
           </div>
- 
-          <div className="grid grid-cols-2 gap-4 pt-4">
-            <CostInput label="FILTERING (₹/KG)" value={filterCost} onChange={setFilterCost} icon={<DropletsIcon />} />
-            <CostInput label="PACKAGING (₹/KG)" value={packageCost} onChange={setPackageCost} icon={<PackageIcon />} />
+          <div>
+            <label className="text-[8px] font-black text-zinc-400 uppercase tracking-widest block">{label}</label>
+            <span className="text-[8px] font-bold text-amber-600/50 uppercase">{subLabel}</span>
           </div>
         </div>
-      </Card>
- 
-      <div className="space-y-4">
-         <Card className="flex items-center justify-between p-6 bg-white/50 border-dashed">
-            <div>
-               <h4 className="font-bold text-lg">{t('profit.raw')}</h4>
-               <p className="text-[10px] font-medium text-brand-secondary/40">Selling raw at wholesale price</p>
-            </div>
-            <div className="text-right">
-               <span className="text-2xl font-bold">₹{rawEarning.toLocaleString()}</span>
-               <p className="text-[10px] font-bold text-brand-secondary/40 uppercase tracking-tight">TOTAL EARNING</p>
-            </div>
-         </Card>
- 
-         <div className="flex justify-center -my-2 relative z-10">
-            <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center shadow-lg border-4 border-bg-warm">
-               <ArrowDown className="text-white w-6 h-6" />
-            </div>
-         </div>
- 
-         <Card className="p-8 border-4 border-amber-400 relative overflow-hidden">
-            <div className="flex items-center justify-between relative z-10">
-               <div>
-                  <h4 className="text-2xl font-serif font-bold text-brand-secondary">{t('profit.processed')}</h4>
-                  <p className="text-[11px] font-medium text-brand-secondary/40">Filtered, packed & sold directly</p>
-               </div>
-               <div className="text-right">
-                  <span className="text-3xl font-extrabold text-brand-secondary">₹{processedEarning.toLocaleString()}</span>
-                  <p className="text-[10px] font-bold text-brand-secondary/40 uppercase tracking-tight">TOTAL EARNING</p>
-               </div>
-            </div>
-            {/* Background decoration */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-100/30 rounded-full blur-2xl -mr-16 -mt-16" />
-         </Card>
-
-         <Card className="p-8 bg-emerald-500 text-white shadow-2xl shadow-emerald-500/20 relative overflow-hidden">
-            <div className="text-center">
-               <p className="text-[10px] font-black uppercase tracking-widest mb-4 opacity-80">EXTRA PROFIT POTENTIAL</p>
-               <h2 className="text-5xl font-bold mb-2">₹{diff.toLocaleString()}</h2>
-               <p className="text-lg font-bold">+{percentage.toFixed(0)}% more earnings</p>
-            </div>
-            <TrendingUp className="absolute bottom-0 right-0 w-48 h-48 text-white/10 -mr-12 -mb-12" />
-         </Card>
       </div>
-
-      <div className="p-6 bg-blue-50/50 rounded-[40px] flex gap-4 items-start border border-blue-100">
-         <Info className="w-6 h-6 text-blue-400 shrink-0 mt-1" />
-         <p className="text-sm font-medium text-blue-800 leading-relaxed">
-           Remember: Quality is key in retail. Grade A honey can fetch even higher prices than the urban average.
-         </p>
+      <div className="relative">
+        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-sm">₹</span>
+        <input 
+          type="number"
+          value={value === 0 ? '' : value}
+          onChange={(e) => {
+            const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+            onChange(val);
+          }}
+          onFocus={(e) => e.target.select()}
+          className="w-full bg-transparent text-xl font-bold outline-none pl-6 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        />
       </div>
-    </div>
+    </Card>
   );
 }
 
-function CostInput({ label, value, onChange, icon }: any) {
+function ResultCard({ label, value, icon }: any) {
   return (
-    <div className="p-4 bg-white border border-brand-primary/10 rounded-2xl shadow-sm">
-      <div className="flex items-center gap-2 mb-3">
-         {icon}
-         <label className="text-[8px] font-black text-amber-600/60 tracking-widest">{label}</label>
+    <Card className="p-6 flex items-center gap-4">
+      <div className="w-12 h-12 bg-zinc-50 rounded-2xl flex items-center justify-center">
+        {icon}
       </div>
-      <input 
-        type="number" 
-        value={value}
-        onChange={(e) => onChange(parseInt(e.target.value) || 0)}
-        className="w-full text-2xl font-bold bg-transparent outline-none"
-      />
-    </div>
-  );
-}
-
-function DropletsIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-amber-500" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 21.5C16.1421 21.5 19.5 18.1421 19.5 14C19.5 10 12 2.5 12 2.5C12 2.5 4.5 10 4.5 14C4.5 18.1421 7.85786 21.5 12 21.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-
-function PackageIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-amber-500" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 20V12M12 12L7.5 9M12 12L16.5 9M21 5.5L12 2L3 5.5V18.5L12 22L21 18.5V5.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
+      <div>
+        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-xl font-bold text-brand-secondary">{value}</p>
+      </div>
+    </Card>
   );
 }

@@ -71,6 +71,7 @@ export const translations: Translations = {
     te: 'లాభం',
     ta: 'லாபம்'
   },
+  'common.back': { en: 'BACK', kn: 'ಹಿಂದಕ್ಕೆ', hi: 'पीछे' },
 
   // Dashboard
   'dash.welcome': { 
@@ -95,8 +96,6 @@ export const translations: Translations = {
   'dash.grade_honey_sub': { en: 'AI TESTING', kn: 'AI ಪರೀಕ್ಷೆ' },
   'dash.prices': { en: 'Prices', kn: 'ಮಾರುಕಟ್ಟೆ' },
   'dash.prices_sub': { en: 'DAILY RATES', kn: 'ದೈನಂದಿನ ದರ' },
-  'dash.group': { en: 'Collective', kn: 'ಸಂಘ' },
-  'dash.group_sub': { en: 'GROUP INFO', kn: 'ಗುಂಪಿನ ಮಾಹಿತಿ' },
   'dash.recent': { en: 'Recent Activity', kn: 'ಇತ್ತೀಚಿನ ಚಟುವಟಿಕೆ' },
   'dash.view_all': { en: 'View All', kn: 'ಎಲ್ಲವನ್ನೂ ನೋಡಿ' },
 
@@ -105,6 +104,7 @@ export const translations: Translations = {
   'logs.add_harvest': { en: 'Log Harvest', kn: 'ಸುಗ್ಗಿ ದಾಖಲಿಸಿ' },
   'logs.quantity': { en: 'QUANTITY (KG)', kn: 'ಪ್ರಮಾಣ (ಕೆಜಿ)' },
   'logs.floral': { en: 'FLORAL SOURCE', kn: 'ಹೂವಿನ ಮೂಲ' },
+  'logs.grade': { en: 'GRADE', kn: 'ದರ್ಜೆ' },
   'logs.save': { en: 'Save', kn: 'ಉಳಿಸಿ' },
 
   // Prices
@@ -119,14 +119,40 @@ export const translations: Translations = {
   'profit.simulator': { en: 'PROFIT SIMULATOR', kn: 'ಲಾಭದ ಲೆಕ್ಕಾಚಾರ' },
   'profit.processed': { en: 'Process & Sell Retail', kn: 'ಸಂಸ್ಕರಿಸಿ ಮಾರಾಟ ಮಾಡಿ' },
   'profit.raw': { en: 'Sell to Middleman', kn: 'ಖರೀದಿದಾರರಿಗೆ ಮಾರಿ' },
+  'profit.harvesting_cost': { en: 'Harvesting', kn: 'ಸಂಗ್ರಹಣೆ' },
+  'profit.processing_cost': { en: 'Processing', kn: 'ಸಂಸ್ಕರಣೆ' },
+  'profit.packaging_cost': { en: 'Packaging', kn: 'ಪ್ಯಾಕೇಜಿಂಗ್' },
+  'profit.shipping_cost': { en: 'Shipping', kn: 'ಸಾಗಣೆ' },
+  'profit.labor_cost': { en: 'Labor', kn: 'ಕೂಲಿ' },
+  'profit.commission': { en: 'Platform Commission (%)', kn: 'ಕಮಿಷನ್ ಕಿಡಿ (%)' },
+  'profit.selling_price': { en: 'Selling Price (₹/KG)', kn: 'ಮಾರಾಟ ದರ (₹/ಕೆಜಿ)' },
+  'profit.target_margin': { en: 'Target Profit Margin (%)', kn: 'ಉದ್ದೇಶಿತ ಲಾಭ (%)' },
+  'profit.total_cost': { en: 'Total Production Cost', kn: 'ಒಟ್ಟು ವೆಚ್ಚ' },
+  'profit.cost_per_kg': { en: 'Cost Per KG', kn: 'ಪ್ರತಿ ಕೆಜಿ ವೆಚ್ಚ' },
+  'profit.profit_per_kg': { en: 'Profit Per KG', kn: 'ಪ್ರತಿ ಕೆಜಿ ಲಾಭ' },
+  'profit.total_profit': { en: 'Total Profit', kn: 'ಒಟ್ಟು ಲಾಭ' },
+  'profit.rec_price': { en: 'Recommended Selling Price', kn: 'ಶಿಫಾರಸು ಮಾಡಿದ ಮಾರಾಟ ದರ' },
 
   // Profile
   'profile.title': { en: 'Profile', kn: 'ಪ್ರೊಫೈಲ್' },
   'profile.role_hunter': { en: 'Hunter', kn: 'ಕೃಷಿಕ' },
-  'profile.role_manager': { en: 'Manager', kn: 'ವ್ಯವಸ್ಥಾಪಕ' },
-  'profile.switch_role': { en: 'Switch Role', kn: 'ಪಾತ್ರ ಬದಲಿಸಿ' },
   'profile.sign_out': { en: 'Sign Out', kn: 'ನಿರ್ಗಮಿಸಿ' },
   'profile.language': { en: 'Language', kn: 'ಭಾಷೆ' },
+
+  // Auth
+  'auth.continue_google': { en: 'Continue with Google', kn: 'ಗೂಗಲ್ ಮೂಲಕ ಮುಂದುವರಿಯಿರಿ', hi: 'गूगल के साथ जारी रखें' },
+  'auth.sign_in_password': { en: 'Sign in with Password', kn: 'ಪಾಸ್‌ವರ್ಡ್ ಮೂಲಕ ಲಾಗಿನ್', hi: 'पासवर्ड से लॉगिन करें' },
+  'auth.or_direct': { en: 'or direct links', kn: 'ಅಥವಾ ನೇರ ಲಿಂಕ್‌ಗಳು', hi: 'या सीधे लिंक' },
+  'auth.phone_otp': { en: 'Phone OTP', kn: 'ಫೋನ್ OTP', hi: 'फोन ओटीपी' },
+  'auth.sign_in_title': { en: 'Sign In', kn: 'ಲಾಗಿನ್', hi: 'साइन इन' },
+  'auth.sign_up_title': { en: 'Create Account', kn: 'ಖಾತೆ ತೆರೆಯಿರಿ', hi: 'खाता बनाएं' },
+  'auth.name_label': { en: 'Full Name', kn: 'ಪೂರ್ಣ ಹೆಸರು', hi: 'पूरा नाम' },
+  'auth.email_label': { en: 'Email', kn: 'ಇಮೇಲ್', hi: 'ईमेल' },
+  'auth.password_label': { en: 'Password', kn: 'ಪಾಸ್‌ವರ್ಡ್', hi: 'पासवर्ड' },
+  'auth.login_button': { en: 'Log In', kn: 'ಲಾಗಿನ್', hi: 'लॉग इन' },
+  'auth.signup_button': { en: 'Create Account', kn: 'ಲಾಗಿನ್', hi: 'खाता बनाएं' },
+  'auth.no_account': { en: "Don't have an account?", kn: 'ಖಾತೆ ಇಲ್ಲವೇ?', hi: 'खाता नहीं है?' },
+  'auth.have_account': { en: 'Already have an account?', kn: 'ಈಗಾಗಲೇ ಖಾತೆ ಇದೆಯೇ?', hi: 'पहले से ही खाता है?' },
 };
 
 interface LanguageContextType {
@@ -138,7 +164,7 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('kn');
+  const [language, setLanguage] = useState<Language>('en');
 
   const t = (key: string) => {
     const entry = translations[key];
